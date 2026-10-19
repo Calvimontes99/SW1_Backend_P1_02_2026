@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
-    "test": "node --test correcciones/pruebas/generacion.test.mjs correcciones/pruebas/permisos.test.mjs",
+    "test": "node --test correcciones/pruebas/generacion.test.mjs correcciones/pruebas/permisos.test.mjs correcciones/pruebas/colaboracion.test.mjs",
     "pruebas:generar": "node correcciones/pruebas/generar-local.mjs",
     "pruebas:exportar": "node correcciones/pruebas/generar-local.mjs",
     "pruebas:backend": "node correcciones/pruebas/verificar-proyectos.mjs backend",
@@ -16,7 +16,8 @@
     "pruebas:contrato": "node correcciones/pruebas/verificar-proyectos.mjs integracion --con-flutter relaciones-opcionales",
     "pruebas:bootstrap": "node correcciones/pruebas/verificar-proyectos.mjs integracion --bootstrap permisos",
     "pruebas": "npm test && npm run pruebas:generar && npm run pruebas:backend && npm run pruebas:flutter",
-    "pruebas:completas": "npm run pruebas && npm run pruebas:integracion -- --con-flutter && npm run pruebas:bootstrap"
+    "pruebas:completas": "npm run pruebas && npm run pruebas:integracion -- --con-flutter && npm run pruebas:bootstrap",
+    "pruebas:colaboracion": "node --env-file=.env correcciones/pruebas/integracion-colaboracion.mjs"
   },
   "keywords": [],
   "author": "",

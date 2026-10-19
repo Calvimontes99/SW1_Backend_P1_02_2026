@@ -1,3 +1,4 @@
+import { transcribirAudio } from '../libs/transcribir.js';
 import { clienteGemini, hayClaveGemini } from '../libs/geminiRotacion.js';
 import fs from 'fs';
 import path from 'path';
@@ -11,70 +12,9 @@ const __dirname = path.dirname(__filename);
 const genAI = clienteGemini;
 
 class AIVoiceController {
-    // Transcribe audio using AI (currently simulated)
+    // Transcripción real del audio con Gemini (antes devolvía un texto inventado según el tamaño)
     static async transcribeAudio(audioFile) {
-        let tempPath; // Define tempPath here to be accessible in the finally block
-        try {
-            // Save the audio file temporarily
-            tempPath = path.join(__dirname, '../../temp/', `audio_${Date.now()}.wav`);
-            
-            // Create temp directory if it doesn't exist
-            const tempDir = path.dirname(tempPath);
-            if (!fs.existsSync(tempDir)) {
-                fs.mkdirSync(tempDir, { recursive: true });
-            }
-
-            fs.writeFileSync(tempPath, audioFile.buffer);
-
-            // OpenAI implementation (commented out)
-            /*
-            const transcription = await openai.audio.transcriptions.create({
-                file: fs.createReadStream(tempPath),
-                model: "whisper-1",
-            });
-            return transcription.text;
-            */
-
-            // Intentar transcripción real con Gemini AI
-            if (hayClaveGemini()) {
-                try {
-                    // Gemini AI podría soportar audio en el futuro
-                    // Por ahora, usamos simulación inteligente basada en tamaño del archivo
-                    const audioSize = audioFile.buffer.length;
-                    
-                    // Simulación más realista basada en el tamaño del audio
-                    let transcription;
-                    if (audioSize < 50000) { // Audio corto
-                        transcription = "Crear diagrama de una biblioteca con clases Libro, Autor y Prestamo";
-                    } else if (audioSize < 200000) { // Audio medio
-                        transcription = "Quiero crear un diagrama UML para un sistema de gestión escolar. Necesito clases como Estudiante con atributos nombre, edad y grado. También Profesor con nombre y materia. Y una clase Curso que relacione estudiantes y profesores";
-                    } else { // Audio largo
-                        transcription = "Necesito diseñar un sistema completo de comercio electrónico. Debe incluir una clase Usuario con información personal, una clase Producto con nombre, precio, descripción y stock. También una clase Pedido que conecte usuarios con productos, incluyendo cantidad y fecha. Además, una clase Categoria para organizar los productos y una clase Pago para manejar las transacciones";
-                    }
-                    
-                    // console.log(`🎙️ Audio transcrito (${audioSize} bytes): ${transcription.substring(0, 50)}...`);
-                    return transcription;
-                    
-                } catch (geminiError) {
-                    console.warn('Error usando Gemini para transcripción:', geminiError.message);
-                }
-            }
-            
-            // Fallback: simulación por defecto
-            const defaultTranscription = "Quiero crear un diagrama para una tienda pequeña. Necesito una clase Producto con atributos nombre, precio y stock. También una clase Cliente con nombre, email y teléfono. Y una clase Venta que conecte productos con clientes.";
-            
-            // console.log('🎙️ Usando transcripción simulada por defecto');
-            return defaultTranscription;
-
-        } catch (error) {
-            console.error('Error transcribiendo audio:', error);
-            throw new Error(`Error transcribiendo audio: ${error.message}`);
-        } finally {
-            // Clean up temp file
-            if (tempPath && fs.existsSync(tempPath)) {
-                fs.unlinkSync(tempPath);
-            }
-        }
+        return transcribirAudio(audioFile.buffer, audioFile.mimetype);
     }
 
     // Expand simple voice descriptions into detailed UML requirements

@@ -1,5 +1,6 @@
 import { createSala, getSalaById, getSala, updateSala, deleteSala } from '../models/sala.model.js';
 import { catchedAsync, response } from '../middlewares/catchedAsync.js';
+import { puedeAccederASala } from '../libs/salaAccess.js';
 
 class SalaController {
     constructor() {}
@@ -73,6 +74,11 @@ class SalaController {
 
     getSalaById = catchedAsync(async (req, res) => {
         const { id } = req.params;
+        // Solo el dueño y los invitados pueden leer el diagrama
+        const acceso = await puedeAccederASala(req.user && req.user.id, parseInt(id, 10));
+        if (!acceso.ok) {
+            return response(res, acceso.status, { error: true, message: acceso.message });
+        }
         // console.log(`Controller: fetching sala with ID: ${id}`);
         
         const sala = await getSalaById(id);
@@ -113,6 +119,9 @@ class SalaController {
         }
 
         const sala = await deleteSala(id);
+        // Tablero borrado: todos los conectados pierden la conexión en vivo
+        const revocar = req.app.get('revocarAcceso');
+        if (revocar) await revocar(id, null, 'El creador eliminó este tablero.').catch(() => {});
         response(res, 200, sala);
     });
 }

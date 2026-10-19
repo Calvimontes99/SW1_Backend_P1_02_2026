@@ -2,6 +2,7 @@ import { createUserSala, getUserSalaById, getUserSalas, deleteUserSala } from '.
 import { getSalaById } from '../models/sala.model.js'
 import { getUserByEmail } from '../models/auth.model.js';
 import { catchedAsync, response } from '../middlewares/catchedAsync.js';
+import { levantarExpulsion, registrarExpulsion } from '../colaboracion/repositorio.js';
 
 class UserSalaController {
     constructor() {}
@@ -48,6 +49,8 @@ class UserSalaController {
         }
 
         try {
+            // Invitar de nuevo por correo es la decisión explícita del dueño de readmitir a un expulsado
+            await levantarExpulsion(salas_id, invitedId);
             const usersala = await createUserSala(invitedId, salas_id);
             response(res, 201, usersala);
         } catch (error) {
@@ -101,6 +104,14 @@ class UserSalaController {
             }
         }
         const usersala = await deleteUserSala(id);
+        // Si lo expulsó el dueño (no se fue solo), su enlace de invitación ya no lo readmite
+        if (!esPropio) await registrarExpulsion(fila.salas_id, filaUserId);
+        // Sin membresía, también se corta su conexión en vivo con la sala (ya no recibe ni envía cambios)
+        const revocar = req.app.get('revocarAcceso');
+        if (revocar) {
+            await revocar(fila.salas_id, filaUserId, esPropio ? 'Saliste de este tablero.' : 'El creador del tablero te quitó el acceso.')
+                .catch((e) => console.error('No se pudo cortar el acceso en vivo:', e.message));
+        }
         response(res, 200, usersala);
     });
 }

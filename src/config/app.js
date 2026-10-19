@@ -13,6 +13,7 @@ import aiRoutes from '../routes/ai.routes.js';
 import healthRoutes from '../routes/health.routes.js';
 import { FRONTEND_URLS } from '../config.js';
 import importarRoutes from '../routes/importar.routes.js';
+import colaboracionRoutes from '../routes/colaboracion.routes.js';
 const app = express();
 
 // Detrás del proxy HTTPS de la plataforma: req.secure y req.protocol usan X-Forwarded-Proto
@@ -62,6 +63,9 @@ app.use('/apis/health', healthRoutes);
 
 // Importación de proyectos de Enterprise Architect (.EAP)
 app.use('/apis/importar', importarRoutes);
+
+// Colaboración con la IA: chat de la sala, historial, propuestas y dispositivos (app móvil)
+app.use('/apis/colaboracion', colaboracionRoutes);
 
 // Frontend compilado (npm run build): la misma URL sirve la app, la API y los sockets, así la
 // cookie de sesión es del mismo sitio. En desarrollo no hay build y el frontend lo sirve Vite.

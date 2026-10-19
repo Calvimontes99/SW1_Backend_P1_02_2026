@@ -1,6 +1,7 @@
 import { clienteGemini } from '../libs/geminiRotacion.js';
 import { mensajeErrorIA } from '../libs/mensajesError.js';
 import { generarConDeepSeek, hayClaveDeepSeek } from '../libs/deepseek.js';
+import { generarConOllama, hayOllama } from '../libs/ollama.js';
 
 // Cliente de Gemini que rota las API keys configuradas (GEMINI_API_KEYS / GEMINI_API_KEY)
 const genAI = clienteGemini;
@@ -212,6 +213,17 @@ class AIEditorController {
             } catch (errorRespaldo) {
                 console.error('DeepSeek tampoco pudo:', errorRespaldo?.message || errorRespaldo);
                 lastError = lastError || errorRespaldo;
+            }
+        }
+        // Sin internet ni cuota: la IA local (Ollama), si está configurada, también lee imágenes
+        if (hayOllama()) {
+            try {
+                const texto = await generarConOllama(prompt);
+                console.warn('Gemini y DeepSeek no respondieron; se usó la IA local (Ollama)');
+                return { model: 'ollama', text: texto };
+            } catch (errorLocal) {
+                console.error('La IA local tampoco pudo:', errorLocal?.message || errorLocal);
+                lastError = lastError || errorLocal;
             }
         }
         const e = new Error(`All models exhausted or overloaded. Last error: ${lastError?.message || String(lastError)}`);
@@ -826,7 +838,11 @@ IMAGEN ADJUNTA: el usuario envió una foto o captura (diagrama dibujado, pizarra
 
 
             // Verificar si la IA necesita aclaración
-            if (aiResponse.clarifyingQuestions && Array.isArray(aiResponse.clarifyingQuestions) && aiResponse.clarifyingQuestions.length > 0) {
+            // A veces el modelo pone ahí avisos ("se asignó la cardinalidad 1..*") y no preguntas:
+            // solo se detiene si de verdad pregunta algo
+            const preguntaAlgo = Array.isArray(aiResponse.clarifyingQuestions) && aiResponse.clarifyingQuestions
+                .some((p) => String(typeof p === 'string' ? p : p?.question || '').includes('?'));
+            if (preguntaAlgo) {
                 return res.json({
                     success: true,
                     needsClarification: true,

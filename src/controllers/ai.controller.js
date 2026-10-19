@@ -9,6 +9,7 @@ const __dirname = path.dirname(__filename);
 import Ajv from 'ajv';
 import { mensajeErrorIA } from '../libs/mensajesError.js';
 import { generarConDeepSeek, hayClaveDeepSeek } from '../libs/deepseek.js';
+import { generarConOllama, hayOllama } from '../libs/ollama.js';
 
 // Initialize OpenAI client
 // const openai = new OpenAI({
@@ -275,6 +276,17 @@ class AIController {
             } catch (errorRespaldo) {
                 console.error('DeepSeek tampoco pudo:', errorRespaldo?.message || errorRespaldo);
                 lastError = lastError || errorRespaldo;
+            }
+        }
+        // Sin internet ni cuota: la IA local (Ollama), si está configurada, también lee imágenes
+        if (hayOllama()) {
+            try {
+                const texto = await generarConOllama(prompt);
+                console.warn('Gemini y DeepSeek no respondieron; se usó la IA local (Ollama)');
+                return { model: 'ollama', text: texto };
+            } catch (errorLocal) {
+                console.error('La IA local tampoco pudo:', errorLocal?.message || errorLocal);
+                lastError = lastError || errorLocal;
             }
         }
         const e = new Error(`All models exhausted or overloaded. Last error: ${lastError?.message || String(lastError)}`);
